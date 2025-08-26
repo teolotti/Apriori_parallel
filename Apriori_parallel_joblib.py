@@ -108,7 +108,7 @@ def generate_association_rules_joblib(frequent_itemsets, support_data, min_conf,
     chunks = [all_itemsets[i:i + chunk_size_eff] for i in range(0, len(all_itemsets), chunk_size_eff)]
 
     results = Parallel(n_jobs=n_jobs, backend="loky")(
-        delayed(rules_single)(chunk, support_data, min_conf) for chunk in chunks
+        delayed(rules_single)(support_data, min_conf, chunk) for chunk in chunks
     )
     rules = [rule for partial in results for rule in partial]
     return rules
@@ -117,9 +117,9 @@ if __name__ == '__main__':
     # transactions = load_transactions('groceries - groceries.csv')
     transactions = load_transactions_from_long('retail_long.csv')  # Per testare con il dataset Kosarak
     minsup_values = [0.01, 0.02, 0.05]
-    n_jobs_list = [2, 4, 8, 16]
+    n_jobs_list = [2, 4, 8, 16, 32, 64]
     min_conf = 0.25
-    chunk_size = [1, None]
+    chunk_size = [None]
     results_file = "results_joblib.csv"
     with open(results_file, 'w') as f:
         writer = csv.writer(f)
@@ -147,7 +147,7 @@ if __name__ == '__main__':
                     print("Results saved to", results_file)
 
     transactions = load_transactions('groceries - groceries.csv')
-    with open(results_file, 'w') as f:
+    with open(results_file, 'a') as f:
         writer = csv.writer(f)
         writer.writerow(["dataset", "minsup", "num_processes", "chunk_size", "apriori_time", "rules_time"])
         for ms in minsup_values:

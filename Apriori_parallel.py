@@ -4,6 +4,7 @@ import multiprocessing
 import time
 from collections import defaultdict
 import pandas as pd
+from numpy.f2py.crackfortran import verbose
 
 _transactions = None
 
@@ -45,7 +46,7 @@ def support_worker(candidates_chunk):
 # Conta supporto in parallelo
 def count_support_parallel(candidates, transactions, n_processes, chunk_size):
     chunks = [candidates[i:i + chunk_size] for i in range(0, len(candidates), chunk_size)]
-    with multiprocessing.Pool(processes=n_processes, initializer=init_worker, initargs=(transactions,)) as pool:
+    with multiprocessing.Pool(processes=n_processes, initializer=init_worker, initargs=(transactions,),) as pool:
         results = pool.map(support_worker, chunks)
     # Merge dei dizionari
     merged = defaultdict(int)
@@ -129,9 +130,10 @@ if __name__ == '__main__':
     transactions = load_transactions_from_long('retail_long.csv')  # Per testare con il dataset Kosarak
     minsup_values = [0.01, 0.02, 0.05]
     min_conf = 0.25
-    n_processes_list = [2, 4, 8, 16]
-    chunk_size = [1, None]
+    n_processes_list = [2, 4, 8, 16, 32, 64]
+    chunk_size = [None]
     results_file = "results_multiprocessing.csv"
+    apriori_parallel(transactions, minsup_values[0], n_processes_list[0], chunk_size[0])  # Warm-up
     with open(results_file, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["dataset", "minsup", "num_processes", "chunk_size", "apriori_time", "rules_time"])
@@ -160,7 +162,7 @@ if __name__ == '__main__':
                     print("Results saved to", results_file)
 
     transactions = load_transactions('groceries - groceries.csv')
-    with open(results_file, 'w') as f:
+    with open(results_file, 'a') as f:
         writer = csv.writer(f)
         writer.writerow(["dataset", "minsup", "num_processes", "chunk_size", "apriori_time", "rules_time"])
         for ms in minsup_values:
