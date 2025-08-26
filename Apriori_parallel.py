@@ -127,12 +127,12 @@ def generate_association_rules_parallel(frequent_itemsets, support_data, min_con
 
 if __name__ == '__main__':
     # transactions = load_transactions('groceries - groceries.csv')
-    transactions = load_transactions_from_long('retail_long.csv')  # Per testare con il dataset Kosarak
+    transactions = load_transactions_from_long('datasets/retail_long.csv')  # Per testare con il dataset Kosarak
     minsup_values = [0.01, 0.02, 0.05]
     min_conf = 0.25
     n_processes_list = [2, 4, 8, 16, 32, 64]
     chunk_size = [None]
-    results_file = "results_multiprocessing.csv"
+    results_file = "results/results_multiprocessing.csv"
     apriori_parallel(transactions, minsup_values[0], n_processes_list[0], chunk_size[0])  # Warm-up
     with open(results_file, 'w') as f:
         writer = csv.writer(f)
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                     writer.writerow(["retail_long", ms, n_processes, "max" if cs is None else f"{1}", f"{apriori_time:.6f}", f"{avg_rules_time:.8f}"])
                     print("Results saved to", results_file)
 
-    transactions = load_transactions('groceries - groceries.csv')
+    transactions = load_transactions('datasets/groceries - groceries.csv')
     with open(results_file, 'a') as f:
         writer = csv.writer(f)
         writer.writerow(["dataset", "minsup", "num_processes", "chunk_size", "apriori_time", "rules_time"])

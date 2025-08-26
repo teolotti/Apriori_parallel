@@ -82,9 +82,9 @@ def generate_association_rules(frequent_itemsets, support_data, min_conf):
 
 if __name__ == '__main__':
 
-    results_file = "results_sequential.csv"
+    results_file = "results/results_sequential.csv"
     # transactions = load_transactions('groceries - groceries.csv')
-    transactions = load_transactions_from_long('retail_long.csv')  # Per testare con il dataset retail_long
+    transactions = load_transactions_from_long('datasets/retail_long.csv')  # Per testare con il dataset retail_long
 
     minsup_values = [0.01, 0.02, 0.05]
     minconf = 0.25
@@ -114,7 +114,7 @@ if __name__ == '__main__':
             writer.writerow(["retail_long", ms, f"{apriori_time:.6f}", f"{avg_rules_time:.8f}"])
             print("Results saved to", results_file)
 
-    transactions = load_transactions('groceries - groceries.csv')
+    transactions = load_transactions('datasets/groceries - groceries.csv')
 
     with open(results_file, "a", newline="") as f:
         writer = csv.writer(f)

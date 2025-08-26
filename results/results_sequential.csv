@@ -1,0 +1,7 @@
+dataset,minsup,apriori_time,rules_time
+retail_long,0.01,44.491750,0.00013981
+retail_long,0.02,37.750442,0.00005089
+retail_long,0.05,36.868816,0.00001531
+groceries,0.01,2.029105,0.00022454
+groceries,0.02,0.628118,0.00005100
+groceries,0.05,0.141054,0.00000421

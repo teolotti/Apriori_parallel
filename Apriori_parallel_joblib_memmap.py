@@ -49,9 +49,9 @@ def support_worker_chunk(candidates_chunk, transactions_file):
     return support
 
 
-def count_support_joblib_chunks(candidates, transactions_file, n_jobs, chunk_size):
+def count_support_joblib_chunks(candidates, transactions_file, n_jobs_eff, chunk_size):
     chunks = [candidates[i:i + chunk_size] for i in range(0, len(candidates), chunk_size)]
-    results = Parallel(n_jobs=n_jobs, backend="loky")(
+    results = Parallel(n_jobs=n_jobs_eff, backend="multiprocessing")(
         delayed(support_worker_chunk)(chunk, transactions_file) for chunk in chunks
     )
     merged = defaultdict(int)
@@ -109,6 +109,9 @@ def rules_single(support_data, min_conf, itemset_chunk):
                         rules.append((antecedent, consequent, support_data[itemset], conf))
     return rules
 
+def rules_worker(chunk, support_memmap_file, min_conf):
+    support_data = load_memmap(support_memmap_file)  # ⬅️ ogni worker fa load qui
+    return rules_single(support_data, min_conf, chunk)
 
 
 def generate_association_rules_joblib(frequent_itemsets, support_memmap_file, min_conf, n_jobs=4, chunk_size=None):
@@ -122,30 +125,26 @@ def generate_association_rules_joblib(frequent_itemsets, support_memmap_file, mi
         chunk_size_eff = chunk_size
     chunks = [all_itemsets[i:i + chunk_size_eff] for i in range(0, len(all_itemsets), chunk_size_eff)]
 
-    def worker(chunk):
-        support_data = load_memmap(support_memmap_file)  # ⬅️ ogni worker fa load qui
-        return rules_single(support_data, min_conf, chunk)
 
-    results = Parallel(n_jobs=n_jobs, backend="loky")(
-        delayed(worker)(chunk) for chunk in chunks
+    results = Parallel(n_jobs=n_jobs, backend="multiprocessing")(
+        delayed(rules_worker)(chunk, support_memmap_file, min_conf) for chunk in chunks
     )
     rules = [rule for partial in results for rule in partial]
     return rules
 
 
 if __name__ == "__main__":
-    dataset_csv = "retail_long.csv"
     memmap_transaction_file = "transactions.pkl"
     support_data_file = "support_data.pkl"
 
-    trans_list = load_transactions_from_long(dataset_csv)
+    trans_list = load_transactions_from_long("datasets/retail_long.csv")
     save_memmap(trans_list, memmap_transaction_file)
 
     minsup_values = [0.01, 0.02, 0.05]
     n_jobs_list = [2, 4, 8, 16, 32, 64]
     min_conf = 0.25
     chunk_size = [None]
-    results_file = "results_joblib_memmap.csv"
+    results_file = "results/results_joblib_memmap.csv"
     with open(results_file, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["dataset", "minsup", "num_processes", "chunk_size", "apriori_time", "rules_time"])
@@ -165,18 +164,15 @@ if __name__ == "__main__":
                         end_rules = time.perf_counter()
                         rules_times.append(end_rules - start_rules)
 
-                        avg_rules_time = sum(rules_times) / len(rules_times)
+                    avg_rules_time = sum(rules_times) / len(rules_times)
 
-                        print(
-                            f"Apriori found {sum(len(level) for level in frequent_itemsets)} frequent itemsets in {apriori_time:.6f} seconds (media su 10 iterazioni)")
-                        print(f"Generated {len(rules)} rules in {avg_rules_time:.8f} seconds (media su 10 iterazioni)")
+                    print(f"Apriori found {sum(len(level) for level in frequent_itemsets)} frequent itemsets in {apriori_time:.6f} seconds (media su 10 iterazioni)")
+                    print(f"Generated {len(rules)} rules in {avg_rules_time:.8f} seconds (media su 10 iterazioni)")
 
-                        writer.writerow(
-                            ["retail_long", ms, n_jobs, "max" if cs is None else f"{1}", f"{apriori_time:.6f}",
-                             f"{avg_rules_time:.8f}"])
-                        print("Results saved to", results_file)
+                    writer.writerow(["retail_long", ms, n_jobs, "max" if cs is None else f"{1}", f"{apriori_time:.6f}", f"{avg_rules_time:.8f}"])
+                    print("Results saved to", results_file)
 
-    transactions = load_transactions('groceries - groceries.csv')
+    transactions = load_transactions('datasets/groceries - groceries.csv')
     save_memmap(transactions, memmap_transaction_file)
     with open(results_file, 'a') as f:
         writer = csv.writer(f)
@@ -199,15 +195,12 @@ if __name__ == "__main__":
                         end_rules = time.perf_counter()
                         rules_times.append(end_rules - start_rules)
 
-                        avg_rules_time = sum(rules_times) / len(rules_times)
+                    avg_rules_time = sum(rules_times) / len(rules_times)
 
-                        print(
-                            f"Apriori found {sum(len(level) for level in frequent_itemsets)} frequent itemsets in {apriori_time:.6f} seconds (media su 10 iterazioni)")
-                        print(f"Generated {len(rules)} rules in {avg_rules_time:.8f} seconds (media su 10 iterazioni)")
+                    print(f"Apriori found {sum(len(level) for level in frequent_itemsets)} frequent itemsets in {apriori_time:.6f} seconds (media su 10 iterazioni)")
+                    print(f"Generated {len(rules)} rules in {avg_rules_time:.8f} seconds (media su 10 iterazioni)")
 
-                        writer.writerow(
-                            ["groceries", ms, n_jobs, "max" if cs is None else f"{1}", f"{apriori_time:.6f}",
-                             f"{avg_rules_time:.8f}"])
-                        print("Results saved to", results_file)
+                    writer.writerow(["groceries", ms, n_jobs, "max" if cs is None else f"{1}", f"{apriori_time:.6f}", f"{avg_rules_time:.8f}"])
+                    print("Results saved to", results_file)
 
 

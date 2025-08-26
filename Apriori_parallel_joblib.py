@@ -39,7 +39,7 @@ def support_worker_chunk(candidates_chunk, transactions):
 # Conta supporto in parallelo con joblib
 def count_support_joblib(candidates, transactions, n_jobs, chunk_size=None):
     chunks = [candidates[i:i + chunk_size] for i in range(0, len(candidates), chunk_size)]
-    results = Parallel(n_jobs=n_jobs, backend="loky")(
+    results = Parallel(n_jobs=n_jobs, backend="multiprocessing")(
         delayed(support_worker_chunk)(chunk, transactions) for chunk in chunks
     )
     merged = defaultdict(int)
@@ -107,7 +107,7 @@ def generate_association_rules_joblib(frequent_itemsets, support_data, min_conf,
         chunk_size_eff = chunk_size
     chunks = [all_itemsets[i:i + chunk_size_eff] for i in range(0, len(all_itemsets), chunk_size_eff)]
 
-    results = Parallel(n_jobs=n_jobs, backend="loky")(
+    results = Parallel(n_jobs=n_jobs, backend="multiprocessing")(
         delayed(rules_single)(support_data, min_conf, chunk) for chunk in chunks
     )
     rules = [rule for partial in results for rule in partial]
@@ -115,12 +115,12 @@ def generate_association_rules_joblib(frequent_itemsets, support_data, min_conf,
 
 if __name__ == '__main__':
     # transactions = load_transactions('groceries - groceries.csv')
-    transactions = load_transactions_from_long('retail_long.csv')  # Per testare con il dataset Kosarak
+    transactions = load_transactions_from_long('datasets/retail_long.csv')  # Per testare con il dataset Kosarak
     minsup_values = [0.01, 0.02, 0.05]
     n_jobs_list = [2, 4, 8, 16, 32, 64]
     min_conf = 0.25
     chunk_size = [None]
-    results_file = "results_joblib.csv"
+    results_file = "results/results_joblib.csv"
     with open(results_file, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["dataset", "minsup", "num_processes", "chunk_size", "apriori_time", "rules_time"])
@@ -146,7 +146,7 @@ if __name__ == '__main__':
                     writer.writerow(["retail_long", ms, n_jobs, "max" if cs is None else f"{1}", f"{apriori_time:.6f}", f"{avg_rules_time:.8f}"])
                     print("Results saved to", results_file)
 
-    transactions = load_transactions('groceries - groceries.csv')
+    transactions = load_transactions('datasets/groceries - groceries.csv')
     with open(results_file, 'a') as f:
         writer = csv.writer(f)
         writer.writerow(["dataset", "minsup", "num_processes", "chunk_size", "apriori_time", "rules_time"])
