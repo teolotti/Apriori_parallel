@@ -17,7 +17,6 @@ retail_long,0.05,8,max,8.849106,0.07722706
 retail_long,0.05,16,max,8.525824,0.10021982
 retail_long,0.05,32,max,9.043623,0.12636485
 retail_long,0.05,64,max,12.104875,0.21396208
-dataset,minsup,num_processes,chunk_size,apriori_time,rules_time
 groceries,0.01,2,max,1.054708,0.04129312
 groceries,0.01,4,max,0.711819,0.03933926
 groceries,0.01,8,max,0.664441,0.04659628
