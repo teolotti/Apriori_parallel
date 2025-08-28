@@ -26,7 +26,6 @@ def load_transactions(path):
 
 def load_transactions_from_long(path):
     df = pd.read_csv(path)
-    # Raggruppa per transaction id e crea un frozenset per ciascun gruppo
     transactions = [
         frozenset(items)
         for items in df.groupby("tid")["item"].apply(list)
@@ -34,7 +33,6 @@ def load_transactions_from_long(path):
     return transactions
 
 
-# Funzione di supporto per il processo: calcola il supporto per una parte dei candidati
 def support_worker(candidates_chunk):
     support = defaultdict(int)
     for transaction in _transactions:
@@ -43,7 +41,6 @@ def support_worker(candidates_chunk):
                 support[candidate] += 1
     return support
 
-# Conta supporto in parallelo
 def count_support_parallel(candidates, transactions, n_processes, chunk_size):
     chunks = [candidates[i:i + chunk_size] for i in range(0, len(candidates), chunk_size)]
     with multiprocessing.Pool(processes=n_processes, initializer=init_worker, initargs=(transactions,),) as pool:
@@ -55,7 +52,6 @@ def count_support_parallel(candidates, transactions, n_processes, chunk_size):
             merged[itemset] += count
     return merged
 
-# Filtra itemset frequenti
 def filter_frequent(support_count, minsup, n_transactions):
     return {
         itemset: count / n_transactions
@@ -105,7 +101,6 @@ def rules_worker(args):
 
 
 def generate_association_rules_parallel(frequent_itemsets, support_data, min_conf, n_processes=4, chunk_size=None):
-    # Unisci tutti gli itemset di lunghezza > 1
     all_itemsets = [itemset for k_itemsets in frequent_itemsets[1:] for itemset in k_itemsets.keys()]
     if not all_itemsets:
         return []

@@ -19,7 +19,6 @@ def load_transactions(path):
 
 def load_transactions_from_long(path):
     df = pd.read_csv(path)
-    # Raggruppa per transaction id e crea un frozenset per ciascun gruppo
     transactions = [
         frozenset(items)
         for items in df.groupby("tid")["item"].apply(list)
@@ -28,7 +27,6 @@ def load_transactions_from_long(path):
 
 
 def support_worker_chunk(candidates_chunk, transactions):
-    """Calcola il supporto per un chunk di candidati"""
     support = defaultdict(int)
     for transaction in transactions:
         for candidate in candidates_chunk:
@@ -36,7 +34,6 @@ def support_worker_chunk(candidates_chunk, transactions):
                 support[candidate] += 1
     return support
 
-# Conta supporto in parallelo con joblib
 def count_support_joblib(candidates, transactions, n_jobs, chunk_size=None):
     chunks = [candidates[i:i + chunk_size] for i in range(0, len(candidates), chunk_size)]
     results = Parallel(n_jobs=n_jobs, backend="multiprocessing")(
@@ -48,7 +45,6 @@ def count_support_joblib(candidates, transactions, n_jobs, chunk_size=None):
             merged[itemset] += count
     return merged
 
-# Filtra itemset frequenti
 def filter_frequent(support_count, minsup, n_transactions):
     return {
         itemset: count / n_transactions
@@ -56,7 +52,6 @@ def filter_frequent(support_count, minsup, n_transactions):
         if (count / n_transactions) >= minsup
     }
 
-# Apriori con joblib
 def apriori_joblib(transactions, minsup, n_jobs=4, chunk_size=None):
     n_transactions = len(transactions)
     items = sorted({item for transaction in transactions for item in transaction})

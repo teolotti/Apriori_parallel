@@ -5,8 +5,6 @@ from collections import defaultdict
 from turtledemo.penrose import start
 import pandas as pd
 
-
-# Carica le transazioni da file (una transazione per riga, item separati da spazio)
 def load_transactions(path):
     trans_df = pd.read_csv(path, header=None)
     trans_df.drop(trans_df.columns[0], axis=1, inplace=True)
@@ -19,14 +17,12 @@ def load_transactions(path):
 
 def load_transactions_from_long(path):
     df = pd.read_csv(path)
-    # Raggruppa per transaction id e crea un frozenset per ciascun gruppo
     transactions = [
         frozenset(items)
         for items in df.groupby("tid")["item"].apply(list)
     ]
     return transactions
 
-# Conta il supporto degli itemset nel dataset
 def count_support(candidates, transactions):
     support = defaultdict(int)
     for transaction in transactions:
@@ -35,7 +31,6 @@ def count_support(candidates, transactions):
                 support[candidate] += 1
     return support
 
-# Filtra itemset con supporto >= minsup
 def filter_frequent(support_count, minsup, n_transactions):
     return {
         itemset: count / n_transactions
@@ -49,7 +44,6 @@ def apriori(transactions, minsup):
     L = []
     support_data = {}
 
-    # Itemset di lunghezza 1
     candidates = [frozenset([item]) for item in items]
     k = 1
     while candidates:
@@ -59,7 +53,6 @@ def apriori(transactions, minsup):
             break
         L.append(Lk)
         support_data.update(Lk)
-        # Genera nuovi candidati di lunghezza k+1
         prev_frequent = list(Lk.keys())
         candidates = [i.union(j) for i in prev_frequent for j in prev_frequent if len(i.union(j)) == k + 1]
         candidates = list(set(candidates))
@@ -68,7 +61,7 @@ def apriori(transactions, minsup):
 
 def generate_association_rules(frequent_itemsets, support_data, min_conf):
     rules = []
-    for k_itemsets in frequent_itemsets[1:]:  # salta i singoli item
+    for k_itemsets in frequent_itemsets[1:]:
         for itemset in k_itemsets.keys():
             for i in range(1, len(itemset)):
                 for antecedent in itertools.combinations(itemset, i):
@@ -84,7 +77,7 @@ if __name__ == '__main__':
 
     results_file = "results/results_sequential.csv"
     # transactions = load_transactions('groceries - groceries.csv')
-    transactions = load_transactions_from_long('datasets/retail_long.csv')  # Per testare con il dataset retail_long
+    transactions = load_transactions_from_long('datasets/retail_long.csv')
 
     minsup_values = [0.01, 0.02, 0.05]
     minconf = 0.25

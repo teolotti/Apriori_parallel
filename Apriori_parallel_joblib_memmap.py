@@ -8,7 +8,6 @@ import math
 import os
 
 def load_transactions(path):
-    """Carica dataset CSV in lista di frozenset"""
     trans_df = pd.read_csv(path, header=None)
     trans_df.drop(trans_df.columns[0], axis=1, inplace=True)
     transactions = []
@@ -21,7 +20,6 @@ def load_transactions(path):
 
 def load_transactions_from_long(path):
     df = pd.read_csv(path)
-    # Raggruppa per transaction id e crea un frozenset per ciascun gruppo
     transactions = [
         frozenset(items)
         for items in df.groupby("tid")["item"].apply(list)
@@ -29,13 +27,11 @@ def load_transactions_from_long(path):
     return transactions
 
 def save_memmap(transactions, filename="transactions.pkl"):
-    """Salva le transazioni in formato joblib memmap"""
     dump(transactions, filename)
     return filename
 
 
 def load_memmap(filename="transactions.pkl"):
-    """Carica transazioni con memory mapping"""
     return load(filename, mmap_mode='r')
 
 
