@@ -5,7 +5,6 @@ from collections import defaultdict
 import pandas as pd
 from joblib import Parallel, delayed
 
-# Carica le transazioni
 def load_transactions(path):
     trans_df = pd.read_csv(path, header=None)
     trans_df.drop(trans_df.columns[0], axis=1, inplace=True)

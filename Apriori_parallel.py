@@ -4,7 +4,6 @@ import multiprocessing
 import time
 from collections import defaultdict
 import pandas as pd
-from numpy.f2py.crackfortran import verbose
 
 _transactions = None
 
@@ -12,7 +11,6 @@ def init_worker(transactions):
     global _transactions
     _transactions = transactions
 
-# Carica le transazioni da file
 def load_transactions(path):
     trans_df = pd.read_csv(path, header=None)
     trans_df.drop(trans_df.columns[0], axis=1, inplace=True)
@@ -45,7 +43,6 @@ def count_support_parallel(candidates, transactions, n_processes, chunk_size):
     chunks = [candidates[i:i + chunk_size] for i in range(0, len(candidates), chunk_size)]
     with multiprocessing.Pool(processes=n_processes, initializer=init_worker, initargs=(transactions,),) as pool:
         results = pool.map(support_worker, chunks)
-    # Merge dei dizionari
     merged = defaultdict(int)
     for partial in results:
         for itemset, count in partial.items():
@@ -105,7 +102,6 @@ def generate_association_rules_parallel(frequent_itemsets, support_data, min_con
     if not all_itemsets:
         return []
 
-    # Divide in chunk
     if chunk_size is None:
         chunk_size_eff = len(all_itemsets) // n_processes + 1
     else:
@@ -115,7 +111,6 @@ def generate_association_rules_parallel(frequent_itemsets, support_data, min_con
     with multiprocessing.Pool(processes=n_processes) as pool:
         results = pool.map(rules_worker, [(chunk, support_data, min_conf) for chunk in chunks])
 
-    # Flatten
     rules = [rule for partial in results for rule in partial]
     return rules
 

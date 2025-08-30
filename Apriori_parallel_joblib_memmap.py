@@ -106,7 +106,7 @@ def rules_single(support_data, min_conf, itemset_chunk):
     return rules
 
 def rules_worker(chunk, support_memmap_file, min_conf):
-    support_data = load_memmap(support_memmap_file)  # ⬅️ ogni worker fa load qui
+    support_data = load_memmap(support_memmap_file)
     return rules_single(support_data, min_conf, chunk)
 
 
